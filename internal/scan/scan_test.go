@@ -79,3 +79,24 @@ func TestScanKeepsHandshakeWhenHTTPFails(t *testing.T) {
 		t.Fatalf("got %+v", r)
 	}
 }
+
+// A post-quantum-only client against a classical-only server: there's no
+// group in common, so the server must refuse, and the alert is recorded.
+func TestProbePQOnlyAgainstClassicalServer(t *testing.T) {
+	s, host := serve(t, []tls.CurveID{tls.X25519})
+	s.OfferOnly(tls.X25519MLKEM768)
+	r := s.Probe(context.Background(), 1, "example.test", host)
+	if r.OK || r.Error != "tls" || r.Alert != "handshake failure" {
+		t.Fatalf("got %+v, want a refused handshake with alert %q", r, "handshake failure")
+	}
+}
+
+// The same client against a server that supports post-quantum succeeds.
+func TestProbePQOnlyAgainstPQServer(t *testing.T) {
+	s, host := serve(t, []tls.CurveID{tls.X25519, tls.X25519MLKEM768})
+	s.OfferOnly(tls.X25519MLKEM768)
+	r := s.Probe(context.Background(), 1, "example.test", host)
+	if !r.OK || !r.PQ || r.Group != "X25519MLKEM768" {
+		t.Fatalf("got %+v", r)
+	}
+}

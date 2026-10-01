@@ -1,5 +1,7 @@
 # pq-census
 
+> **Start with [FINDINGS.md](FINDINGS.md)**: what the census and its follow-up found, in plain language. The full write-up, with charts, is at [masonkimball.dev/projects/pq-census](https://masonkimball.dev/projects/pq-census/).
+
 How much of the popular web negotiates a **post-quantum TLS key exchange**?
 
 `pq-census` connects to the top sites on the [Tranco list](https://tranco-list.eu)
@@ -55,6 +57,21 @@ who runs the server. This measures that.
   detection may quarantine the scanner itself, because it opens hundreds of
   connections a minute.
 
+## Follow-up: can't, or won't?
+
+The census showed *which* sites use post-quantum key exchange. The follow-up
+asks why the rest don't: does a site that chose a classical key exchange lack
+post-quantum support, or support it and prefer classical? It reconnects with a
+client that offers **only** X25519MLKEM768, which a server without support
+must refuse.
+
+**Result (2026-10-01): it's almost always "can't".** Of 1,773 conclusive
+sites, **1,771 (99.9%) have no post-quantum support**, and only 2 chose
+classical over a post-quantum option they had. 18 had switched it on within a
+day of the census. Method, cross-checks with OpenSSL and caveats (including
+partly upgraded server fleets) are in
+[data/2026-10-01-probe/](data/2026-10-01-probe/README.md).
+
 ## Usage
 
 ```bash
@@ -66,6 +83,13 @@ go run . report -in results.jsonl -md REPORT.md -json summary.json
 Scans resume: stop with Ctrl-C and run the same command again, and domains
 already in `results.jsonl` are skipped.
 
+The follow-up study:
+
+```bash
+go run . probe -in results.jsonl -out probe.jsonl -q
+go run . probe-report -in probe.jsonl -md PROBE.md -json probe-summary.json
+```
+
 ## Layout
 
 ```
@@ -73,6 +97,7 @@ main.go                     scan and report subcommands
 internal/scan               one site: TLS handshake, group, provider, issuer
 internal/provider           CDN / platform detection from headers
 internal/report             summary numbers and the Markdown report
+internal/probe              the follow-up study: verdicts, summary and report
 ```
 
 ## Test

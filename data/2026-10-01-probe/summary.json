@@ -1,0 +1,131 @@
+{
+  "generated_at": "2026-10-01T17:47:15.006975Z",
+  "probed": 2119,
+  "verdicts": {
+    "inconclusive": 328,
+    "no-support": 1771,
+    "now-pq": 18,
+    "supports": 2
+  },
+  "overall": {
+    "name": "All",
+    "conclusive": 1773,
+    "supports": 2,
+    "no_support": 1771,
+    "support_share": 0.11280315848843768
+  },
+  "by_provider": [
+    {
+      "name": "Other",
+      "conclusive": 1542,
+      "supports": 2,
+      "no_support": 1540,
+      "support_share": 0.1297016861219196
+    },
+    {
+      "name": "Google",
+      "conclusive": 151,
+      "supports": 0,
+      "no_support": 151,
+      "support_share": 0
+    },
+    {
+      "name": "Netlify",
+      "conclusive": 28,
+      "supports": 0,
+      "no_support": 28,
+      "support_share": 0
+    },
+    {
+      "name": "Akamai",
+      "conclusive": 22,
+      "supports": 0,
+      "no_support": 22,
+      "support_share": 0
+    },
+    {
+      "name": "Amazon (ELB/S3)",
+      "conclusive": 11,
+      "supports": 0,
+      "no_support": 11,
+      "support_share": 0
+    },
+    {
+      "name": "Unknown",
+      "conclusive": 11,
+      "supports": 0,
+      "no_support": 11,
+      "support_share": 0
+    },
+    {
+      "name": "Cloudflare",
+      "conclusive": 5,
+      "supports": 0,
+      "no_support": 5,
+      "support_share": 0
+    },
+    {
+      "name": "Fastly",
+      "conclusive": 1,
+      "supports": 0,
+      "no_support": 1,
+      "support_share": 0
+    },
+    {
+      "name": "GitHub",
+      "conclusive": 1,
+      "supports": 0,
+      "no_support": 1,
+      "support_share": 0
+    },
+    {
+      "name": "Vercel",
+      "conclusive": 1,
+      "supports": 0,
+      "no_support": 1,
+      "support_share": 0
+    }
+  ],
+  "by_census_group": [
+    {
+      "name": "X25519",
+      "conclusive": 1684,
+      "supports": 2,
+      "no_support": 1682,
+      "support_share": 0.1187648456057007
+    },
+    {
+      "name": "CurveP256",
+      "conclusive": 56,
+      "supports": 0,
+      "no_support": 56,
+      "support_share": 0
+    },
+    {
+      "name": "CurveP384",
+      "conclusive": 28,
+      "supports": 0,
+      "no_support": 28,
+      "support_share": 0
+    },
+    {
+      "name": "CurveP521",
+      "conclusive": 5,
+      "supports": 0,
+      "no_support": 5,
+      "support_share": 0
+    }
+  ],
+  "no_support_alerts": {
+    "handshake failure": 1771
+  },
+  "inconclusive_reasons": {
+    "control failed: timeout": 7,
+    "pq-only failed without a TLS alert: other": 261,
+    "pq-only failed without a TLS alert: reset": 37,
+    "pq-only failed without a TLS alert: timeout": 2,
+    "pq-only refused with an unrelated alert: no application protocol": 17,
+    "pq-only refused with an unrelated alert: protocol version not supported": 1,
+    "pq-only refused with an unrelated alert: unexpected message": 3
+  }
+}

@@ -31,6 +31,7 @@ type Result struct {
 	Host       string `json:"host,omitempty"` // the host actually reached (the domain, or www.<domain>)
 	OK         bool   `json:"ok"`
 	Error      string `json:"error,omitempty"` // dns, timeout, refused, reset, tls, blocked, other
+	Alert      string `json:"alert,omitempty"` // for Error "tls": the TLS alert the server sent, e.g. "handshake failure"
 	TLSVersion string `json:"tls_version,omitempty"`
 	Group      string `json:"group,omitempty"` // negotiated key exchange, e.g. X25519MLKEM768
 	PQ         bool   `json:"pq"`
@@ -50,6 +51,7 @@ func IsPostQuantum(g tls.CurveID) bool {
 
 type Scanner struct {
 	client    *http.Client
+	transport *http.Transport
 	userAgent string
 }
 
@@ -80,6 +82,7 @@ func New(timeout time.Duration, userAgent string, allowPrivate bool) *Scanner {
 		ForceAttemptHTTP2:     true,
 	}
 	return &Scanner{
+		transport: transport,
 		client: &http.Client{
 			Transport: transport,
 			Timeout:   2 * timeout,
@@ -93,6 +96,26 @@ func New(timeout time.Duration, userAgent string, allowPrivate bool) *Scanner {
 }
 
 var errBlocked = errors.New("resolves to a non-public address")
+
+// OfferOnly makes the scanner's client offer exactly these key exchange
+// groups instead of Go's defaults. With only X25519MLKEM768, a server that
+// has no post-quantum support has no group in common with the client and
+// must refuse the handshake (TLS alert "handshake failure").
+func (s *Scanner) OfferOnly(groups ...tls.CurveID) *Scanner {
+	cfg := &tls.Config{}
+	if s.transport.TLSClientConfig != nil {
+		cfg = s.transport.TLSClientConfig.Clone() // keep trust settings (tests set RootCAs)
+	}
+	cfg.CurvePreferences = groups
+	s.transport.TLSClientConfig = cfg
+	return s
+}
+
+// Probe connects to exactly this host, with no www fallback, so a follow-up
+// measurement reaches the same server the original scan did.
+func (s *Scanner) Probe(ctx context.Context, rank int, domain, host string) Result {
+	return s.try(ctx, rank, domain, host)
+}
 
 // Scan tries https://<domain>/, then https://www.<domain>/ if the bare domain
 // can't be reached at all (many sites only serve on www).
@@ -143,6 +166,7 @@ func (s *Scanner) try(ctx context.Context, rank int, domain, host string) Result
 			r.Error = "other"
 		} else {
 			r.Error = classify(err)
+			r.Alert = alertName(err)
 		}
 		return r
 	}
@@ -158,6 +182,23 @@ func (s *Scanner) try(ctx context.Context, rank int, domain, host string) Result
 		}
 	}
 	return r
+}
+
+// alertName returns the TLS alert a server sent to refuse the handshake, like
+// "handshake failure", or "" if the error isn't one. Go reports a remote alert
+// as a *net.OpError with Op "remote error" wrapping its own unexported alert
+// type, so errors.As(err, &tls.AlertError{}) doesn't match it (checked in a
+// test); the alert's text is what's available.
+func alertName(err error) string {
+	var op *net.OpError
+	if errors.As(err, &op) && op.Op == "remote error" && op.Err != nil {
+		return strings.TrimPrefix(op.Err.Error(), "tls: ")
+	}
+	var ae tls.AlertError
+	if errors.As(err, &ae) {
+		return strings.TrimPrefix(ae.Error(), "tls: ")
+	}
+	return ""
 }
 
 func classify(err error) string {
